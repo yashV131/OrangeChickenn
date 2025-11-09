@@ -34,7 +34,7 @@ COLOR_MAP = {
     'Braised Chicken(g)': '#673ab7', # Deep Purple
     'Green Onion': '#e91e63',     # Pink/Red
 }
-PREDICTION_COLOR = '#212121' # Dark Grey/Black for the prediction highlight
+PREDICTION_COLOR = 'lightgray' # Changed to light gray for visibility on dark background
 
 # --- NEW: Define the specific dark background color ---
 DASHBOARD_BG_COLOR = '#2d3748'
@@ -111,7 +111,7 @@ def calculate_monthly_usage(df_ingredients):
 
 def predict_may_usage(all_usage_data):
     """
-    Predicts May usage using simple linear regression (y = mx + b) 
+    Predicts May usage using Polynomial Regression (Degree 2) 
     based on the trend of the available historical months (June-September).
     May corresponds to a time index of 0.
     """
@@ -122,22 +122,35 @@ def predict_may_usage(all_usage_data):
     # Store results for prediction
     may_predictions = {}
     
+    # Need at least 3 points for a Degree 2 polynomial (we have 4: 1, 2, 3, 4)
+    if len(historical_months) < 3:
+        print(f"Not enough data points (need at least 3) for Polynomial Regression (Degree 2).")
+        # Fallback to simple linear regression if less than 3 points
+        for ingredient in KEY_INGREDIENTS:
+            historical_usage = [data['usage'][ingredient] for data in historical_data_points]
+            if len(historical_months) >= 2:
+                 slope, intercept, _, _, _ = linregress(historical_months, historical_usage)
+                 predicted_usage = intercept
+            else:
+                 predicted_usage = 0
+            may_predictions[ingredient] = max(0, predicted_usage)
+        print("Using Linear Regression as a fallback.")
+        return may_predictions
+
     for ingredient in KEY_INGREDIENTS:
         # Extract historical usage values for the current ingredient
         historical_usage = [data['usage'][ingredient] for data in historical_data_points]
         
-        if len(historical_months) < 2:
-            print(f"Not enough data points (need at least 2) to predict {ingredient}. Skipping prediction.")
-            may_predictions[ingredient] = 0 # Default to 0 if not enough data
-            continue
-
-        # Perform Linear Regression: y = m*x + b
-        # x is the month index, y is the total usage
-        slope, intercept, r_value, p_value, std_err = linregress(historical_months, historical_usage)
+        # Perform Polynomial Regression (Degree 2): y = a*x^2 + b*x + c
+        # Coeffs will be [a, b, c]
+        coeffs = np.polyfit(historical_months, historical_usage, 2)
+        
+        # Create a polynomial function from the coefficients
+        poly_func = np.poly1d(coeffs)
         
         # Predict May usage (where x = 0)
-        # Predicted Usage (y_pred) = slope * 0 + intercept
-        predicted_usage = intercept
+        # Predicted Usage (y_pred) = poly_func(0) = c
+        predicted_usage = poly_func(0)
         
         # Ensure prediction is non-negative
         may_predictions[ingredient] = max(0, predicted_usage)
@@ -205,20 +218,21 @@ def plot_usage(all_usage_data, may_predictions):
         
         # Scatter the May prediction point in the PREDICTION_COLOR
         ax.scatter(calendar_months[may_index], usage_data[may_index], 
-                    color=PREDICTION_COLOR, zorder=5, label=may_label)
+                    color=PREDICTION_COLOR, s=100, zorder=5, label=may_label) # Increased size (s=100) for visibility
         
         # Annotate the May prediction
         ax.annotate(
             f'Pred: {predicted_may:,.0f}', 
             (calendar_months[may_index], usage_data[may_index]),
             textcoords="offset points", 
-            xytext=(-10,15), 
+            xytext=(-10,25), # Moved up for better separation from x-axis
             ha='center', 
             fontsize=9,
+            fontweight='bold', # Make text bold
             color=TEXT_COLOR # Annotation text is also white
         )
         
-    ax.set_title('Ingredient Usage Trend and May Prediction (Custom Colors)', fontsize=16, color=TEXT_COLOR)
+    ax.set_title('Ingredient Usage Trend and May Prediction (Polynomial Regression)', fontsize=16, color=TEXT_COLOR)
     ax.set_xlabel('Month', fontsize=14, color=TEXT_COLOR)
     ax.set_ylabel('Total Usage (Units/Grams/Count)', fontsize=14, color=TEXT_COLOR)
     
@@ -228,6 +242,7 @@ def plot_usage(all_usage_data, may_predictions):
     # Adjust grid color to look subtle against the new dark background
     ax.grid(True, linestyle='--', alpha=0.3, color='lightgray') 
     
+    # Update legend to match dark background
     ax.legend(loc='upper left', fontsize=10, facecolor=DASHBOARD_BG_COLOR, edgecolor=TEXT_COLOR, labelcolor=TEXT_COLOR)
     fig.tight_layout()
     
@@ -249,7 +264,7 @@ if __name__ == "__main__":
     # 3. Predict May Usage (using only calculated historical data)
     may_predictions = predict_may_usage(historical_usage_data)
     
-    print("--- Predicted May Usage (Linear Trend, New Ingredients) ---")
+    print("--- Predicted May Usage (Polynomial Regression) ---")
     for ingredient, usage in may_predictions.items():
         print(f"Predicted May Usage for {ingredient}: {usage:,.2f}")
     
