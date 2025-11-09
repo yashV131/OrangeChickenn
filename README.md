@@ -71,8 +71,13 @@ Managing a restaurant food supply chain is complex: ingredients arrive from ship
 **Deployment / Environment**
 
 * Python environment (version 3.14.0)
-* Dependencies listed in `requirements.txt`
-* Runs locally and is deployed on goDaddy
+* Code:
+* clone the directory
+* cd .\Mai-Shan-Yun-Inventory-Intelligence\
+* pip install @google/generative-ai
+* npm install
+* npm run dev
+
 
 ---
 
