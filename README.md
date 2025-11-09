@@ -1,4 +1,4 @@
-Here’s a comprehensive **README** for the `inventory‑intelligence‑dashboard` sub‑project of the Mai‑Shan‑Yun Inventory Intelligence repository. You can copy, paste and adapt this into your `README.md` file in the `inventory‑intelligence‑dashboard` folder (or root, if you prefer). Feel free to customize wording, screenshots, etc., as needed.
+
 
 ---
 
