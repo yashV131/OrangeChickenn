@@ -22,14 +22,8 @@
 7. [Usage Guide](#usage‑guide)
 
    * Key Views / Tabs
-   * Typical Workflows
-8. [Customization & Extensibility](#customization‑extensibility)
-9. [Deployment](#deployment)
-10. [Testing](#testing)
-11. [Known Issues & Limitations](#known‑issues‑limitations)
-12. [Contributing](#contributing)
-13. [License](#license)
-14. [Acknowledgements](#acknowledgements)
+8. [Known Issues & Limitations](#known‑issues‑limitations)
+9. [Acknowledgements](#acknowledgements)
 
 ---
 
